@@ -3,7 +3,7 @@ name: peer-review
 description: >
   Request a second opinion or cross-check from another AI agent running in a
   different tmux pane (opencode, kiro, another Claude Code instance, etc.).
-  Writes context to ~/dev/ai/skills/peer-review/reviews/, discovers available panes, and injects a
+  Writes context to a reviews/ subdirectory of the skill's base directory, discovers available panes, and injects a
   review prompt into the target pane via tmux send-keys.
 allowed-tools:
   - Bash
@@ -40,6 +40,18 @@ another agent verify a refactor, or collaborate on a multi-step task.
 Also handles cleanup of comms files — trigger with: "clean up comms", "clean peer review files".
 
 ## Step-by-step instructions
+
+### Step 0 — Resolve the reviews directory
+
+The skill loader injects a line at the bottom of this skill content:
+
+```
+Base directory for this skill: file:///path/to/peer-review
+```
+
+Extract the path by removing the `file://` scheme prefix from the URL. For example, `file:///Users/foo/.config/opencode/skills/peer-review` becomes `/Users/foo/.config/opencode/skills/peer-review`. Then append `/reviews` to get the reviews directory.
+
+Use this as `{reviews_dir}` in all subsequent steps. This is not a user-supplied parameter — it is derived from the skill loader. Do not hardcode any path.
 
 ### Step 1 — Establish session name
 
@@ -86,7 +98,7 @@ command itself, the actual output.
 
 Write the request file directly to the comms directory (no subdirectories, no `mkdir`).
 
-**`~/dev/ai/skills/peer-review/reviews/{session}-request.md`** — YAML front matter followed by the body:
+**`{reviews_dir}/{session}-request.md`** — YAML front matter followed by the body:
 
 ```
 ---
@@ -117,8 +129,8 @@ Template (adapt as needed):
 ```
 Peer review requested. Use the Write tool to create a file — do not just reply here.
 
-1. Read ~/dev/ai/skills/peer-review/reviews/{session}-request.md
-2. Use the Write tool to write your review to ~/dev/ai/skills/peer-review/reviews/{session}-response.md
+1. Read {reviews_dir}/{session}-request.md
+2. Use the Write tool to write your review to {reviews_dir}/{session}-response.md
 
 Your output must go to that file. The requesting agent will read it from there.
 ```
@@ -127,8 +139,8 @@ Send it with:
 ```bash
 tmux send-keys -t '{target}' 'Peer review requested. Use the Write tool to create a file — do not just reply here.
 
-1. Read ~/dev/ai/skills/peer-review/reviews/{session}-request.md
-2. Use the Write tool to write your review to ~/dev/ai/skills/peer-review/reviews/{session}-response.md
+1. Read {reviews_dir}/{session}-request.md
+2. Use the Write tool to write your review to {reviews_dir}/{session}-response.md
 
 Your output must go to that file. The requesting agent will read it from there.' Enter
 ```
@@ -136,17 +148,17 @@ Your output must go to that file. The requesting agent will read it from there.'
 ### Step 5 — Confirm and wait
 
 Tell the user:
-- The request has been written to `~/dev/ai/skills/peer-review/reviews/{session}-request.md`
+- The request has been written to `{reviews_dir}/{session}-request.md`
 - The prompt has been sent to the target pane
-- When the reviewer is done, `~/dev/ai/skills/peer-review/reviews/{session}-response.md` will appear
-- To read the review: `Read ~/dev/ai/skills/peer-review/reviews/{session}-response.md`
+- When the reviewer is done, `{reviews_dir}/{session}-response.md` will appear
+- To read the review: `Read {reviews_dir}/{session}-response.md`
 
 Do NOT poll or loop waiting for `response.md`. The human will come back and ask
 you to read it when the reviewing agent has finished.
 
 **Proactive cleanup check:** After confirming the review is sent, run:
 ```bash
-ls ~/dev/ai/skills/peer-review/reviews/*.md 2>/dev/null | wc -l
+ls {reviews_dir}/*.md 2>/dev/null | wc -l
 ```
 If the count is 10 or more, mention it briefly — e.g. "By the way, there are
 N review files in the reviews directory — want me to help clean up old ones
@@ -158,7 +170,7 @@ When the user asks you to read the review after the reviewing agent has
 finished, use the Read tool on:
 
 ```
-~/dev/ai/skills/peer-review/reviews/{session}-response.md
+{reviews_dir}/{session}-response.md
 ```
 
 Then summarize the reviewer's feedback and suggest next steps.
@@ -172,8 +184,8 @@ If confirmed, check each file and delete only those that exist, using the
 **exact fully-qualified path** — never globs, wildcards, or relative paths:
 
 ```bash
-test -f /Users/e133949/dev/ai/skills/peer-review/reviews/{session}-request.md && rm /Users/e133949/dev/ai/skills/peer-review/reviews/{session}-request.md
-test -f /Users/e133949/dev/ai/skills/peer-review/reviews/{session}-response.md && rm /Users/e133949/dev/ai/skills/peer-review/reviews/{session}-response.md
+test -f {reviews_dir}/{session}-request.md && rm {reviews_dir}/{session}-request.md
+test -f {reviews_dir}/{session}-response.md && rm {reviews_dir}/{session}-response.md
 ```
 
 Never use `rm -rf` or wildcards.
@@ -182,9 +194,9 @@ Never use `rm -rf` or wildcards.
 
 When invoked with "clean up comms" or "clean peer review files" (without starting a new review):
 
-1. List all `.md` files in `~/dev/ai/skills/peer-review/reviews/`:
+1. List all `.md` files in `{reviews_dir}/`:
    ```bash
-   ls ~/dev/ai/skills/peer-review/reviews/*.md
+   ls {reviews_dir}/*.md
    ```
 2. Group by session prefix and present to the user.
 3. Ask which session(s) to remove.
