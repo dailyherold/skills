@@ -5,24 +5,29 @@ SKILLS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DIR="$SKILLS_DIR/src"
 
 # ---------------------------------------------------------------------------
-# Third-party skill sources
-# Format: "repo-url|clone-dir|skill-subpath|symlink-name"
+# External skills — add entries here: <repo-url> <skill-path>
 # ---------------------------------------------------------------------------
-THIRD_PARTY=(
-  "https://github.com/anthropics/skills|src/anthropic-skills|skills/skill-creator|anthropics-skill-creator"
-  "https://github.com/anthropics/skills|src/anthropic-skills|skills/pdf|anthropics-pdf"
-  "https://github.com/anthropics/skills|src/anthropic-skills|skills/xlsx|anthropics-xlsx"
-  "https://github.com/anthropics/skills|src/anthropic-skills|skills/pptx|anthropics-pptx"
-  "https://github.com/anthropics/skills|src/anthropic-skills|skills/docx|anthropics-docx"
+declare -a SKILLS=(
+  "https://github.com/anthropics/skills  skills/skill-creator"
+  "https://github.com/anthropics/skills  skills/pdf"
+  "https://github.com/anthropics/skills  skills/xlsx"
+  "https://github.com/anthropics/skills  skills/pptx"
+  "https://github.com/anthropics/skills  skills/docx"
 )
 
-mkdir -p "$SRC_DIR"
+# ---------------------------------------------------------------------------
+# Helper — clone dir: src/org/repo, symlink name: org-skilldir
+# ---------------------------------------------------------------------------
+link_skill() {
+  local repo="$1" skill_path="$2"
+  local repo_slug="${repo#https://github.com/}"
+  local org="${repo_slug%%/*}"
+  local skill_dir="${skill_path##*/}"
+  local symlink_name="$org-$skill_dir"
+  local clone_path="$SRC_DIR/$repo_slug"
 
-for entry in "${THIRD_PARTY[@]}"; do
-  IFS='|' read -r repo clone_dir skill_path symlink_name <<< "$entry"
-  clone_path="$SKILLS_DIR/$clone_dir"
+  mkdir -p "$(dirname "$clone_path")"
 
-  # Clone if not already present
   if [ ! -d "$clone_path/.git" ]; then
     echo "Cloning $repo -> $clone_path"
     git clone "$repo" "$clone_path"
@@ -30,15 +35,20 @@ for entry in "${THIRD_PARTY[@]}"; do
     echo "Already cloned: $clone_path"
   fi
 
-  # Create symlink if missing
-  target="$SKILLS_DIR/$symlink_name"
-  source="$clone_path/$skill_path"
+  local target="$SKILLS_DIR/$symlink_name"
   if [ ! -L "$target" ]; then
-    ln -s "$source" "$target"
-    echo "Linked: $symlink_name -> $clone_dir/$skill_path"
+    ln -s "$clone_path/$skill_path" "$target"
+    echo "Linked: $symlink_name -> src/$repo_slug/$skill_path"
   else
     echo "Symlink exists: $symlink_name"
   fi
+}
+
+# ---------------------------------------------------------------------------
+mkdir -p "$SRC_DIR"
+
+for entry in "${SKILLS[@]}"; do
+  link_skill $entry
 done
 
 echo "Done."
