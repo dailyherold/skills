@@ -1,0 +1,31 @@
+# Third-party skill sources
+src/
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+*~
+
+# Claude Code
+.claude/settings.local.json
+
+# opencode
+.opencode/
+
+# Kiro
+.kiro/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs / tmp
+*.log
+tmp/
+
+# Peer review comms (ephemeral, not for version control)
+peer-review/reviews/

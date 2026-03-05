@@ -1,0 +1,18 @@
+(version 1)
+(deny default)
+(allow process-exec*
+  (subpath "/nix"))
+(allow file-read*
+  (subpath "/nix")
+  (subpath "/usr/lib")
+  (subpath "/System/Library")
+  (literal "/etc/resolv.conf")
+  (subpath "/private/etc/ssl"))
+(allow file-write*
+  (subpath (param "SANDBOX_DIR")))
+(allow network-outbound
+  (remote tcp "*:443"))
+(allow file-read* file-write*
+  (literal "/private/var/run/nix-daemon.sock"))
+; Uncomment if macOS logging fails inside sandbox:
+; (allow mach-lookup (global-name "com.apple.system.logger"))

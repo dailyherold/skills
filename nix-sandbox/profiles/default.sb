@@ -1,0 +1,13 @@
+(version 1)
+(allow default)
+(deny file-write*
+  (subpath "/etc")
+  (subpath "/usr")
+  (subpath "/bin")
+  (subpath "/sbin")
+  (subpath "/var")
+  (subpath "/System")
+  (subpath "/Library")
+  (subpath "/private/etc"))
+(allow file-write*
+  (subpath (param "SANDBOX_DIR")))
