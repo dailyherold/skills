@@ -13,6 +13,9 @@ declare -a SKILLS=(
   "https://github.com/anthropics/skills  skills/xlsx"
   "https://github.com/anthropics/skills  skills/pptx"
   "https://github.com/anthropics/skills  skills/docx"
+
+  # K-Dense-AI/claude-scientific-skills
+  "https://github.com/K-Dense-AI/claude-scientific-skills  scientific-skills/markitdown"
 )
 
 # ---------------------------------------------------------------------------
@@ -38,7 +41,7 @@ link_skill() {
   # Ensure org-* pattern is in .gitignore
   local pattern="$org-*"
   if ! grep -qxF "$pattern" "$SKILLS_DIR/.gitignore"; then
-    sed -i '' "/^# External skill sources/a\\
+    sed -i '' "/^src\/$/a\\
 $pattern
 " "$SKILLS_DIR/.gitignore"
     echo "Added $pattern to .gitignore"

@@ -1,6 +1,7 @@
 # External skill sources and symlinks
 src/
 anthropics-*
+K-Dense-AI-*
 
 # OS
 .DS_Store
