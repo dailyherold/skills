@@ -19,7 +19,6 @@ I develop my own skills in this repo but also pull in skills from other sources.
    ```
    "https://github.com/owner/repo  path/to/skill"
    ```
-2. If it's from a new org, add an `org-*` pattern to `.gitignore` (e.g. `openclaw-*`).
-3. Run `./setup.sh` — it clones the repo (once) and creates the symlink.
+2. Run `./setup.sh` — it clones the repo (once), creates the symlink, and updates `.gitignore` automatically.
 
 Open an issue with smarter ideas (not submodules).

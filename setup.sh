@@ -35,6 +35,15 @@ link_skill() {
     echo "Already cloned: $clone_path"
   fi
 
+  # Ensure org-* pattern is in .gitignore
+  local pattern="$org-*"
+  if ! grep -qxF "$pattern" "$SKILLS_DIR/.gitignore"; then
+    sed -i '' "/^# External skill sources/a\\
+$pattern
+" "$SKILLS_DIR/.gitignore"
+    echo "Added $pattern to .gitignore"
+  fi
+
   local target="$SKILLS_DIR/$symlink_name"
   if [ ! -L "$target" ]; then
     ln -s "$clone_path/$skill_path" "$target"
