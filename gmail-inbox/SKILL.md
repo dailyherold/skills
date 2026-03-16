@@ -6,8 +6,10 @@ description: >
   whenever the user mentions Gmail, their Google inbox, Google Workspace email,
   or any email task that involves a @gmail.com address or Google account — even
   if they don't say "gws" or ask explicitly about email tooling. Also trigger
-  for Gmail inbox triage, searching by sender or subject, bulk organizing, and
-  watching for new mail.
+  for Gmail inbox triage, searching by sender or subject, bulk organizing,
+  watching for new mail, and inbox analytics — including top senders, sender
+  histograms, "who emails me most", breakdown by sender, and bulk cleanup by
+  sender pattern (mark-read, trash).
 ---
 
 # Gmail — gws CLI
@@ -270,3 +272,9 @@ gws gmail +watch --project my-project --cleanup   # delete Pub/Sub resources on 
 - Prefer trash over permanent delete
 - List labels first rather than guessing IDs
 - Use `--dry-run` to validate operations before executing
+
+---
+
+## Inbox analytics
+
+For sender histograms, top-sender analysis, and bulk cleanup by sender pattern, see [inbox-analytics.md](inbox-analytics.md).
