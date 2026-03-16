@@ -114,7 +114,23 @@ focus: "{specific question from question parameter}"
 
 Omit the `focus` field entirely if no `question` parameter was provided.
 
-Body (after front matter) — put everything the reviewer needs here:
+Body (after front matter) — start with a `## What to do` section so the reviewer can re-orient from the file alone if the tmux message gets lost or misread, then follow with context:
+
+```
+## What to do
+
+Software/technical review requested — topic: {session-slug}.
+This is a code and design review — not academic peer review.
+
+Read this file, then write your findings to:
+{reviews_dir}/{session}-response.md
+
+That path is absolute. Do not write to your current working directory.
+
+## Context
+```
+
+After the `## Context` heading, include everything the reviewer needs:
 - What is being reviewed (file paths, code snippet, or description)
 - Relevant background context
 - Any pre-analysis or findings you want to share
@@ -122,27 +138,49 @@ Body (after front matter) — put everything the reviewer needs here:
 
 ### Step 4 — Inject prompt into target pane
 
-Send a review request to the target pane. The prompt should be self-contained
-so the reviewing agent knows exactly what to do without any other context.
+Send a review request to the target pane. The prompt must be self-contained —
+the reviewing agent has no other context. Be explicit about:
+- what kind of review this is (software/technical, not academic)
+- the exact absolute path to read and write (repeat it; do not leave room for CWD misinterpretation)
 
-Template (adapt as needed):
+Template (substitute actual values before sending — no placeholders in the final message):
 ```
-Peer review requested. Use the Write tool to create a file — do not just reply here.
+Software/technical review requested — topic: {session-slug}.
+This is a code and design review — not academic peer review.
 
-1. Read {reviews_dir}/{session}-request.md
-2. Use the Write tool to write your review to {reviews_dir}/{session}-response.md
+Do not reply here. Use the Write tool to write a file.
 
-Your output must go to that file. The requesting agent will read it from there.
+Steps:
+1. Read the context file at this exact absolute path:
+   {reviews_dir}/{session}-request.md
+
+2. Review the code, decision, or problem described in that file.
+
+3. Write your findings to this exact absolute path:
+   {reviews_dir}/{session}-response.md
+
+That response path is absolute. Do not write to your current working directory or any relative path. The requesting agent polls that exact location.
 ```
+
+Where `{session-slug}` is the human-readable part of the session name (e.g. `nix-config-conundrum`, `jwt-refactor`) — not the full session ID with date prefix.
 
 Send it with:
 ```bash
-tmux send-keys -t '{target}' 'Peer review requested. Use the Write tool to create a file — do not just reply here.
+tmux send-keys -t '{target}' 'Software/technical review requested — topic: {session-slug}.
+This is a code and design review — not academic peer review.
 
-1. Read {reviews_dir}/{session}-request.md
-2. Use the Write tool to write your review to {reviews_dir}/{session}-response.md
+Do not reply here. Use the Write tool to write a file.
 
-Your output must go to that file. The requesting agent will read it from there.' Enter
+Steps:
+1. Read the context file at this exact absolute path:
+   {reviews_dir}/{session}-request.md
+
+2. Review the code, decision, or problem described in that file.
+
+3. Write your findings to this exact absolute path:
+   {reviews_dir}/{session}-response.md
+
+That response path is absolute. Do not write to your current working directory or any relative path. The requesting agent polls that exact location.' Enter
 ```
 
 ### Step 5 — Confirm and wait
