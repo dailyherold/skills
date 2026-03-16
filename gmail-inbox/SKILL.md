@@ -7,7 +7,8 @@ description: >
   or any email task that involves a @gmail.com address or Google account — even
   if they don't say "gws" or ask explicitly about email tooling. Also trigger
   for Gmail inbox triage, searching by sender or subject, bulk organizing, and
-  watching for new mail.---
+  watching for new mail.
+---
 
 # Gmail — gws CLI
 
@@ -19,7 +20,18 @@ All operations go through `gws gmail`. Auth must be set up first.
 gws auth login   # browser-based OAuth, one-time per machine
 ```
 
-## Two patterns
+## Your From address
+
+Before sending, replying, drafting, or forwarding — resolve your email address. Gmail will reject messages with a mismatched or missing From header.
+
+```bash
+_from=$(gws gmail users getProfile --params '{"userId":"me"}' --format json 2>/dev/null | jq -r '.emailAddress')
+# e.g. you@gmail.com
+```
+
+---
+
+## Command structure
 
 | Use case | Tool |
 |----------|------|
@@ -27,7 +39,18 @@ gws auth login   # browser-based OAuth, one-time per machine
 | Simple send | `gws gmail +send` |
 | Everything else (read, search, reply, organize) | `gws gmail users <resource> <method> --params '{"userId":"me",...}'` |
 
-Global flags on every command: `--format json` for machine-readable output, `--format table` (default) for human output.
+---
+
+## JSON output
+
+- Always use `--format json` unless the user explicitly wants human-readable output.
+- Always append `2>/dev/null` because `gws` writes a keyring diagnostic to stderr on every invocation that will break parsers:
+
+```bash
+gws gmail users messages list --params '{"userId":"me","q":"is:unread"}' --format json 2>/dev/null | jq .
+```
+
+**Debug Note:** Remove `2>/dev/null` temporarily if commands return empty or unexpected output — real errors (auth failures, bad params) also go to stderr and will be hidden otherwise.
 
 ---
 
@@ -97,7 +120,7 @@ gws gmail users messages list --params '{"userId":"me","q":"in:sent to:alice@exa
 gws gmail +send --to recipient@example.com --subject 'Hello' --body 'Hi there!'
 
 # With CC/BCC or HTML body — use raw API with base64-encoded RFC 2822 message
-_raw=$(printf 'From: you@gmail.com\r\nTo: recipient@example.com\r\nSubject: Hello\r\nContent-Type: text/plain\r\n\r\nBody here.' | base64 | tr -d '\n')
+_raw=$(printf 'From: $_from\r\nTo: recipient@example.com\r\nSubject: Hello\r\nContent-Type: text/plain\r\n\r\nBody here.' | base64 | tr -d '\n')
 gws gmail users messages send --params '{"userId":"me"}' --json "{\"raw\":\"$_raw\"}"
 ```
 
@@ -111,7 +134,7 @@ Threading in Gmail relies on `In-Reply-To`/`References` headers AND the `threadI
 
 ```bash
 # Step 1: get the original message to extract headers
-_msg=$(gws gmail users messages get --params '{"userId":"me","id":"MSG_ID","format":"full"}' --format json)
+_msg=$(gws gmail users messages get --params '{"userId":"me","id":"MSG_ID","format":"full"}' --format json 2>/dev/null)
 
 # Step 2: extract needed fields (adjust jq paths based on actual response structure)
 _thread_id=$(echo "$_msg" | jq -r '.threadId')
@@ -120,7 +143,7 @@ _from=$(echo "$_msg" | jq -r '.payload.headers[] | select(.name=="From") | .valu
 _subject=$(echo "$_msg" | jq -r '.payload.headers[] | select(.name=="Subject") | .value')
 
 # Step 3: compose reply with threading headers
-_raw=$(printf "From: you@gmail.com\r\nTo: $_from\r\nSubject: Re: $_subject\r\nIn-Reply-To: $_msg_id\r\nReferences: $_msg_id\r\nContent-Type: text/plain\r\n\r\nReply body here." | base64 | tr -d '\n')
+_raw=$(printf "From: $_from\r\nTo: $_from\r\nSubject: Re: $_subject\r\nIn-Reply-To: $_msg_id\r\nReferences: $_msg_id\r\nContent-Type: text/plain\r\n\r\nReply body here." | base64 | tr -d '\n')
 
 # Step 4: send with threadId to keep in thread
 gws gmail users messages send --params '{"userId":"me"}' --json "{\"raw\":\"$_raw\",\"threadId\":\"$_thread_id\"}"
@@ -136,10 +159,10 @@ Forward is a fresh send with no `In-Reply-To`/`References`. Read the original fi
 
 ```bash
 # Read original to get subject/body
-gws gmail users messages get --params '{"userId":"me","id":"MSG_ID","format":"full"}' --format json
+gws gmail users messages get --params '{"userId":"me","id":"MSG_ID","format":"full"}' --format json 2>/dev/null
 
 # Compose and send forward
-_raw=$(printf "From: you@gmail.com\r\nTo: newrecipient@example.com\r\nSubject: Fwd: Original Subject\r\nContent-Type: text/plain\r\n\r\n[Optional preamble.]\r\n\r\n--- Forwarded message ---\r\nFrom: original@example.com\r\nSubject: Original Subject\r\n\r\nOriginal body here." | base64 | tr -d '\n')
+_raw=$(printf "From: $_from\r\nTo: newrecipient@example.com\r\nSubject: Fwd: Original Subject\r\nContent-Type: text/plain\r\n\r\n[Optional preamble.]\r\n\r\n--- Forwarded message ---\r\nFrom: original@example.com\r\nSubject: Original Subject\r\n\r\nOriginal body here." | base64 | tr -d '\n')
 gws gmail users messages send --params '{"userId":"me"}' --json "{\"raw\":\"$_raw\"}"
 ```
 
@@ -149,7 +172,7 @@ gws gmail users messages send --params '{"userId":"me"}' --json "{\"raw\":\"$_ra
 
 ```bash
 # Create draft
-_raw=$(printf "From: you@gmail.com\r\nTo: recipient@example.com\r\nSubject: Draft subject\r\nContent-Type: text/plain\r\n\r\nDraft body." | base64 | tr -d '\n')
+_raw=$(printf "From: $_from\r\nTo: recipient@example.com\r\nSubject: Draft subject\r\nContent-Type: text/plain\r\n\r\nDraft body." | base64 | tr -d '\n')
 gws gmail users drafts create --params '{"userId":"me"}' --json "{\"message\":{\"raw\":\"$_raw\"}}"
 
 # List drafts
@@ -214,7 +237,7 @@ gws gmail users messages batchModify \
 
 ```bash
 # List all labels (get IDs for custom labels)
-gws gmail users labels list --params '{"userId":"me"}' --format json
+gws gmail users labels list --params '{"userId":"me"}' --format json 2>/dev/null
 
 # Get label details
 gws gmail users labels get --params '{"userId":"me","id":"LABEL_ID"}'
