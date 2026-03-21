@@ -16,6 +16,7 @@ declare -a SKILLS=(
 
   # K-Dense-AI/claude-scientific-skills
   "https://github.com/K-Dense-AI/claude-scientific-skills  scientific-skills/markitdown"
+  "https://github.com/K-Dense-AI/claude-scientific-skills  scientific-skills/citation-management"
 )
 
 # ---------------------------------------------------------------------------
