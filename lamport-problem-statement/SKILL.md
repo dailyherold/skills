@@ -1,5 +1,5 @@
 ---
-name: generating-lamport-problem-statements
+name: lamport-problem-statement
 description: "Use this skill to apply Leslie Lamport's method whenever the user is in solution-mode without a clear problem statement. Trigger on: \"should I use X or Y?\", \"I'm thinking of using [approach]\", \"we're debating between A and B\", \"going back and forth on whether to\", \"what are the tradeoffs between\", \"which is better\", \"what should the acceptance criteria be\", or any explicit request to apply Lamport's method. Also trigger when someone proposes a specific technology or architecture before stating what problem it solves. The skill contains an intervention framework and output format — use it rather than engaging with solution details directly when no problem statement has been established yet."
 license: MIT
 allowed-tools: Read
