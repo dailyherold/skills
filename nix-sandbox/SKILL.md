@@ -1,6 +1,6 @@
 ---
 name: nix-sandbox
-description: "Run commands or tools in an isolated nix-shell sandbox without modifying the system. Use this skill whenever a needed tool or package isn't in PATH, the user says 'without installing' or 'don't touch my system', or you'd otherwise suggest nix-shell or nix run. Trigger automatically on 'command not found' errors when a system-level tool (not a project library) is needed. The skill handles platform detection and constructs the correct sandbox invocation for macOS (sandbox-exec) or Linux (bwrap) automatically."
+description: "Run commands or tools in an isolated nix-shell sandbox without modifying the system. Use this skill whenever a needed tool or package isn't in PATH, the user says 'without installing' or 'don't touch my system', or you'd otherwise suggest nix-shell or nix run. Trigger automatically on 'command not found' errors, Python ModuleNotFoundError, Node 'Cannot find module', Ruby LoadError, or any time you would otherwise suggest pip install / gem install / npm install -g for a tool (not a project library). The skill handles platform detection and constructs the correct sandbox invocation for macOS (sandbox-exec) or Linux (bwrap) automatically."
 ---
 
 # nix-sandbox
@@ -13,7 +13,9 @@ Use this skill whenever a task requires a package or tool that is not already in
 
 Trigger automatically when:
 - The user asks to run a script, tool, or command that isn't available (`command not found`)
+- A Python `ModuleNotFoundError` / `No module named X`, Node `Cannot find module`, or Ruby `LoadError` occurs and the package is needed as a **tool** being run, not a library the project imports
 - A task needs a specific language runtime, linter, formatter, or CLI not on the system
+- You are about to suggest `pip install`, `gem install`, or `npm install -g` to satisfy a tool dependency — stop and use nix-sandbox instead
 - The user says "without installing", "in isolation", "don't touch my system", or similar
 - You would otherwise suggest `nix-shell` or `nix run` without isolation
 
@@ -21,11 +23,22 @@ Note on session-level jailing: if this agent was launched via `jailed-claude-cod
 
 ## Check for existing dep managers first
 
-Before reaching for nix-sandbox, check whether the working directory has a language-level dep manager (uv, bun, npm, cargo, go.mod, etc.) and route package needs through it instead. Use nix-sandbox for **system-level tools** needed to accomplish a task — not for project library dependencies. When ambiguous, ask: "Is this a tool I'm running, or a library the project imports?" If the latter, use the project's dep manager.
+Before reaching for nix-sandbox, check whether the working directory has a language-level dep manager (uv, bun, npm, cargo, go.mod, etc.) and route package needs through it instead. Use nix-sandbox for **system-level tools** needed to accomplish a task — not for project library dependencies. When ambiguous, ask: "Is this a tool I'm running, or a library the project imports?" If a tool → nix-sandbox, regardless of whether the error is `command not found` or `ModuleNotFoundError`. If a library the project imports → use the project's dep manager.
+
+## Finding the right nixpkgs package name
+
+nixpkgs attribute names often differ from pip/apt/brew names. Before running, look up the correct name at [search.nixos.org/packages](https://search.nixos.org/packages).
+
+Common patterns:
+- Python packages: `python3Packages.requests`, `python3Packages.bibtexparser` (not just `bibtexparser`)
+- Node packages: `nodePackages.prettier`, `nodePackages.typescript` — note: only popular packages are in nixpkgs. For packages not found there, declare `nodejs` and run `npm install <pkg>` inside the command instead.
+- Most CLI tools use their plain name: `ffmpeg`, `ripgrep`, `jq`
+
+If a package isn't found inside the sandbox, the most likely cause is a wrong attribute path — search.nixos.org is the authoritative lookup.
 
 ## Parameters
 
-- **packages** — space-separated nixpkgs package names available inside (e.g. `"python3 pytest"`)
+- **packages** — space-separated nixpkgs attribute names available inside (e.g. `"python3 python3Packages.bibtexparser"`)
 - **command** — shell command to run
 - **workdir** — read+write working directory (default: auto-created temp dir `/tmp/agent-sandbox-XXXXXX`)
 - **project_dir** — path the sandbox may read (optional)
@@ -94,6 +107,8 @@ If any of the sandboxed packages seem like they'd be broadly useful at the syste
 
 ## Failure modes
 
+- **nix: command not found** → Nix is not installed on this system. The sandbox requires Nix. Stop and inform the user.
+- **error: attribute 'X' missing** or **package not found** → wrong nixpkgs attribute path. Look up the correct name at search.nixos.org. Python packages in particular need the `python3Packages.X` prefix.
 - **bwrap: operation not permitted** → check `/proc/sys/kernel/unprivileged_userns_clone` must be `1` (NixOS default)
 - **sandbox-exec: initialization failed** → SBPL syntax error; dry-run with `sandbox-exec -n -f <profile>.sb /bin/true`
 - **DNS fails in bwrap** → ensure using `/run/systemd/resolve/stub-resolv.conf` not `/etc/resolv.conf` (NixOS systemd-resolved makes the latter a dangling symlink)
