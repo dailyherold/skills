@@ -39,6 +39,16 @@ another agent verify a refactor, or collaborate on a multi-step task.
 
 Also handles cleanup of comms files — trigger with: "clean up comms", "clean peer review files".
 
+## Data Exchange Formats
+
+Try each format in order. Stop at first success. Each linked file specifies where to write, success/failure detection, reviewer prompt, and cleanup for that format. Request content schema is identical across all formats — only the destination varies.
+
+1. [Local Markdown](./resources/formats/local-markdown.md)
+2. [Obsidian](./resources/formats/obsidian.md)
+3. [Logseq](./resources/formats/logseq.md)
+
+If the user requests multiple formats, write to each and send a reviewer prompt per format.
+
 ## Step-by-step instructions
 
 ### Step 0 — Resolve the reviews directory
@@ -87,109 +97,50 @@ Accept either `session:window.pane` or pane ID (`%N`) — both work with
 Note: kiro panes may show `fish` as the command due to a known bug. Use the
 `session:window.pane` format (matches the tmux status bar) to identify them.
 
-### Step 3 — Write context files
+### Step 3 — Write context using the first available format
 
 First, capture the current UTC timestamp:
 ```bash
 date -u +%Y-%m-%dT%H:%M:%SZ
 ```
-Run that command and use its output as the `timestamp` value below — not the
-command itself, the actual output.
+Use its output as `{timestamp}` below.
 
-Write the request file directly to the comms directory (no subdirectories, no `mkdir`).
+**Iterate through the Data Exchange Formats list** (above). For each format in order:
 
-**`{reviews_dir}/{session}-request.md`** — YAML front matter followed by the body:
+1. Extract the relative path from the markdown link (e.g. `[Local Markdown](./resources/formats/local-markdown.md)` → `./resources/formats/local-markdown.md`), then resolve it against `{base_dir}` to get an absolute path (e.g. `{base_dir}/resources/formats/local-markdown.md`)
+2. Read that file — it contains write instructions and a reviewer prompt template
+3. Attempt to write the request using the `## Write` instructions in that file
+4. **On success**: record which format was used, load its `## Reviewer Prompt Template` for Step 4, and stop
+5. **On failure**: tell the user (e.g. "Logseq unavailable, trying next format...") and continue to the next format
 
-```
----
-agent: {your harness name — e.g. "Claude Code", "opencode", "kiro", not the model ID}
-model: {model ID}
-working_dir: {current working directory}
-timestamp: {output of the date command above}
-prompt: |
-  {verbatim text of the most recent user message that led to this request}
-focus: "{specific question from question parameter}"
----
-```
+If every format fails, report to the user and stop.
 
-Omit the `focus` field entirely if no `question` parameter was provided.
+**Multi-format broadcast**: If the user explicitly asks for multiple formats, write to each specified format (don't stop at first success) and send a reviewer prompt per format.
 
-Body (after front matter) — start with a `## What to do` section so the reviewer can re-orient from the file alone if the tmux message gets lost or misread, then follow with context:
-
-```
-## What to do
-
-Software/technical review requested — topic: {session-slug}.
-This is a code and design review — not academic peer review.
-
-Read this file, then write your findings to:
-{reviews_dir}/{session}-response.md
-
-That path is absolute. Do not write to your current working directory.
-
-## Context
-```
-
-After the `## Context` heading, include everything the reviewer needs:
-- What is being reviewed (file paths, code snippet, or description)
-- Relevant background context
-- Any pre-analysis or findings you want to share
-- The specific question (if provided via `question` parameter)
+**Request schema**: see `{base_dir}/resources/schema.md` — read it before writing the request content.
 
 ### Step 4 — Inject prompt into target pane
 
-Send a review request to the target pane. The prompt must be self-contained —
-the reviewing agent has no other context. Be explicit about:
-- what kind of review this is (software/technical, not academic)
-- the exact absolute path to read and write (repeat it; do not leave room for CWD misinterpretation)
+Use the **reviewer prompt template** from the format file chosen in Step 3. Each format file has a `## Reviewer Prompt Template` section — substitute actual values (no placeholders) before sending.
 
-Template (substitute actual values before sending — no placeholders in the final message):
-```
-Software/technical review requested — topic: {session-slug}.
-This is a code and design review — not academic peer review.
+The prompt must be self-contained — the reviewing agent has no other context. Every template should make explicit:
+- exactly where to read the request and where to write the response (tool name, page name, or absolute path)
 
-Do not reply here. Use the Write tool to write a file.
-
-Steps:
-1. Read the context file at this exact absolute path:
-   {reviews_dir}/{session}-request.md
-
-2. Review the code, decision, or problem described in that file.
-
-3. Write your findings to this exact absolute path:
-   {reviews_dir}/{session}-response.md
-
-That response path is absolute. Do not write to your current working directory or any relative path. The requesting agent polls that exact location.
+Send with:
+```bash
+tmux send-keys -t '{target}' '{filled-in prompt from format file}' Enter
 ```
 
 Where `{session-slug}` is the human-readable part of the session name (e.g. `nix-config-conundrum`, `jwt-refactor`) — not the full session ID with date prefix.
 
-Send it with:
-```bash
-tmux send-keys -t '{target}' 'Software/technical review requested — topic: {session-slug}.
-This is a code and design review — not academic peer review.
-
-Do not reply here. Use the Write tool to write a file.
-
-Steps:
-1. Read the context file at this exact absolute path:
-   {reviews_dir}/{session}-request.md
-
-2. Review the code, decision, or problem described in that file.
-
-3. Write your findings to this exact absolute path:
-   {reviews_dir}/{session}-response.md
-
-That response path is absolute. Do not write to your current working directory or any relative path. The requesting agent polls that exact location.' Enter
-```
-
 ### Step 5 — Confirm and wait
 
 Tell the user:
-- The request has been written to `{reviews_dir}/{session}-request.md`
+- The format used (e.g. "Written via Logseq" or "Fell back to local markdown")
+- Where the request was written (page name, vault path, or file path)
 - The prompt has been sent to the target pane
-- When the reviewer is done, `{reviews_dir}/{session}-response.md` will appear
-- To read the review: `Read {reviews_dir}/{session}-response.md`
+- Where the response will appear when the reviewer is done (per the format file's "Response location" section)
+- How to read the review when ready (tool and location)
 
 Do NOT poll or loop waiting for `response.md`. The human will come back and ask
 you to read it when the reviewing agent has finished.
@@ -204,22 +155,15 @@ when we're done here?" Don't block on it; just flag it and move on.
 
 ## Reading a review (follow-up)
 
-When the user asks you to read the review after the reviewing agent has
-finished, use the Read tool on:
-
-```
-{reviews_dir}/{session}-response.md
-```
+When the user asks you to read the review, use the **Response Location** specified in the format file that was used (see its `## Response Location` section). For local markdown (the current default): `Read {reviews_dir}/{session}-response.md`
 
 Then summarize the reviewer's feedback and suggest next steps.
 
 ### Step 6 — Cleanup (optional)
 
-After reading and summarizing the review, ask:
-"Would you like to clean up the files for this session?"
+After reading and summarizing the review, ask: "Would you like to clean up this session?"
 
-If confirmed, check each file and delete only those that exist, using the
-**exact fully-qualified path** — never globs, wildcards, or relative paths:
+Cleanup is format-dependent — follow the `## Cleanup` section in the format file used. For local markdown, check each file and delete only those that exist using exact fully-qualified paths:
 
 ```bash
 test -f {reviews_dir}/{session}-request.md && rm {reviews_dir}/{session}-request.md

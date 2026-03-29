@@ -1,0 +1,43 @@
+{
+  "skill_name": "peer-review",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "can you get opencode to review my jwt refactor? i just rewrote the token validation in src/auth/jwt.ts and want a second set of eyes before i push. send it to pane %3",
+      "expected_output": "Agent reads the local-markdown format file from resources/formats/local-markdown.md, writes a request file to the reviews/ directory with correct YAML front matter (agent, model, working_dir, timestamp, prompt fields), includes ## What to do and ## Context sections, and uses the reviewer prompt template from the format file to send to pane %3 via tmux.",
+      "files": [],
+      "expectations": [
+        "A request file was written to the reviews/ directory with a session name like YYYYMMDD-jwt-refactor-request.md",
+        "The request file contains YAML front matter with at least: agent, model, working_dir, timestamp, prompt fields",
+        "The request file contains a ## What to do section",
+        "The request file contains a ## Context section",
+        "The format file at resources/formats/local-markdown.md was read before writing",
+        "The reviewer prompt sent via tmux includes the absolute path to the request file"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "have kiro check my rate limiter — target is main:kiro.0. specifically i want to know if it'll hold up under concurrent load. the impl is in src/middleware/rate-limit.ts",
+      "expected_output": "Agent writes a request file with the focus field set to the concurrent load question, includes the specific question prominently in the ## Context section, and sends the reviewer prompt to main:kiro.0.",
+      "files": [],
+      "expectations": [
+        "A request file was written to the reviews/ directory",
+        "The request file YAML front matter includes a focus field mentioning concurrent requests or concurrent load",
+        "The ## Context section references rate-limit.ts or the rate limiter",
+        "The tmux send-keys command targets main:kiro.0"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "clean up the peer review files",
+      "expected_output": "Agent lists all .md files in the reviews/ directory, groups them by session prefix, and asks the user which ones to remove — without deleting anything until confirmed.",
+      "files": [],
+      "expectations": [
+        "Agent runs ls or equivalent to list files in the reviews/ directory",
+        "Agent presents the list of sessions to the user",
+        "Agent does NOT delete any files without user confirmation",
+        "Agent asks which sessions to remove"
+      ]
+    }
+  ]
+}
