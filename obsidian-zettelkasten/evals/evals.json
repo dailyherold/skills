@@ -1,0 +1,29 @@
+{
+  "skill_name": "obsidian-zettelkasten",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Add a note — distributed teams need over-communication to replace the ambient awareness you get in an office",
+      "expected_output": "Captures the thought to today's daily note (Daily/YYYYMMDD-daily.md) as a timestamped bullet, creating the daily note if it doesn't exist. Does not open Obsidian.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "What fleeting notes haven't become permanent yet?",
+      "expected_output": "Lists contents of Fleeting/ folder, reads each note, and presents them with a summary and suggested next action (promote, discard, link, later) for each.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "I want to promote my fleeting note on context switching into a permanent note",
+      "expected_output": "Finds the context switching fleeting note, rewrites it as an atomic claim with a statement-style title, confirms with the user before moving, moves the file to Permanent/, and suggests 2-3 existing notes to link to.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "I'm about to start work on beyondmidi, what do I have on it?",
+      "expected_output": "Queries the vault for beyondmidi-related notes (searches by tag #beyondmidi and keyword, finds the index note, reads relevant permanent notes), and presents a useful summary of accumulated thinking.",
+      "files": []
+    }
+  ]
+}
