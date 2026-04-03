@@ -7,9 +7,10 @@ description: Manage a zettelkasten in Obsidian — capturing notes, promoting id
 
 ## Vault
 
-- **Name**: `personal`
-- **Path**: `/Users/e133949/dev/zk/vaults/personal`
-- **CLI**: `obsidian vault=personal <command>`
+<!-- Configure: edit the two lines below -->
+<!-- - **vault_name**: myvault -->
+<!-- - **vault_path**: /path/to/vault -->
+- **CLI**: `obsidian vault={vault_name} <command>`
 - **Requires Obsidian app to be running** (the CLI talks to the running app)
 
 ## Folder structure
@@ -37,12 +38,12 @@ Unless the user explicitly says "fleeting", capture goes to today's daily note.
 DAILY="Daily/$(date +%Y%m%d)-daily.md"
 
 # Check if it exists; create with header if not
-obsidian vault=personal file "$DAILY" 2>/dev/null || \
-  obsidian vault=personal create path="$DAILY" \
+obsidian vault={vault_name} file "$DAILY" 2>/dev/null || \
+  obsidian vault={vault_name} create path="$DAILY" \
     content="# $(date +%Y%m%d) Daily\nCreated: $(date '+%Y-%m-%d')\n\n## Captures\n"
 
 # Append the capture as a bullet
-obsidian vault=personal append path="$DAILY" \
+obsidian vault={vault_name} append path="$DAILY" \
   content="- $(date '+%H:%M') $THOUGHT"
 ```
 
@@ -57,7 +58,7 @@ When the user says "fleeting", "make this a fleeting note", or "expand this":
 ```bash
 ID=$(date +%Y%m%d%H%M)
 SLUG="some-short-slug"  # lowercase-hyphenated from title
-obsidian vault=personal create path="Fleeting/${ID}-${SLUG}.md" \
+obsidian vault={vault_name} create path="Fleeting/${ID}-${SLUG}.md" \
   content="# $TITLE\nCreated: $(date '+%Y-%m-%d %H:%M')\n\n$CONTENT\n\n## References\n1."
 ```
 
@@ -66,7 +67,7 @@ obsidian vault=personal create path="Fleeting/${ID}-${SLUG}.md" \
 When capturing from a source (book, paper, article):
 
 ```bash
-obsidian vault=personal create path="Literature/@${CITEKEY}.md" \
+obsidian vault={vault_name} create path="Literature/@${CITEKEY}.md" \
   content="---\ntitle: $TITLE\nauthors: $AUTHORS\nyear: $YEAR\nreference: $REF\n---\n\n$SYNTHESIS\n\n## References\n1."
 ```
 
@@ -91,7 +92,7 @@ When a daily note bullet deserves to be developed:
 ```bash
 # Create the fleeting note
 ID=$(date +%Y%m%d%H%M)
-obsidian vault=personal create path="Fleeting/${ID}-${SLUG}.md" \
+obsidian vault={vault_name} create path="Fleeting/${ID}-${SLUG}.md" \
   content="# $TITLE\nCreated: $(date '+%Y-%m-%d %H:%M')\n\n$EXPANDED_CONTENT\n\n## References\n1. [[$(date +%Y%m%d)-daily]]"
 
 # Update daily note — replace the bullet with a link
@@ -112,11 +113,11 @@ When promoting:
 
 ```bash
 # Move the file to Permanent/
-obsidian vault=personal move path="Fleeting/${ID}-${SLUG}.md" \
+obsidian vault={vault_name} move path="Fleeting/${ID}-${SLUG}.md" \
   path="Permanent/${ID}-${SLUG}.md"
 
 # Or if renaming (new title → new slug):
-obsidian vault=personal move file="${ID}-${SLUG}" \
+obsidian vault={vault_name} move file="${ID}-${SLUG}" \
   path="Permanent/${NEW_ID}-${NEW_SLUG}.md"
 ```
 
@@ -137,15 +138,15 @@ When the user asks to "process notes", "check my inbox", or "what needs attentio
 1. **Show recent daily notes** with unlinked bullets (bullets that aren't wikilinks yet):
 ```bash
 # List recent daily notes
-obsidian vault=personal files folder=Daily
+obsidian vault={vault_name} files folder=Daily
 
 # Read today's and recent ones to find raw bullets
-obsidian vault=personal read path="Daily/$(date +%Y%m%d)-daily.md"
+obsidian vault={vault_name} read path="Daily/$(date +%Y%m%d)-daily.md"
 ```
 
 2. **Show fleeting notes** — especially old ones that haven't become permanent:
 ```bash
-obsidian vault=personal files folder=Fleeting
+obsidian vault={vault_name} files folder=Fleeting
 ```
 
 3. For each unprocessed item, offer options:
@@ -164,20 +165,20 @@ Use this proactively — whenever a note is created or promoted, suggest relatio
 
 ```bash
 # Search by keyword/concept
-obsidian vault=personal search query="$KEYWORD"
-obsidian vault=personal search:context query="$KEYWORD"
+obsidian vault={vault_name} search query="$KEYWORD"
+obsidian vault={vault_name} search:context query="$KEYWORD"
 
 # Find what links to a note
-obsidian vault=personal backlinks file="$NOTE"
+obsidian vault={vault_name} backlinks file="$NOTE"
 
 # Find all notes with a tag
-obsidian vault=personal tag name="$TAG" verbose
+obsidian vault={vault_name} tag name="$TAG" verbose
 
 # Find orphans (no incoming links — potential connection targets)
-obsidian vault=personal orphans
+obsidian vault={vault_name} orphans
 
 # Find dead-ends (no outgoing links — need connections)
-obsidian vault=personal deadends
+obsidian vault={vault_name} deadends
 ```
 
 **When to proactively suggest connections:**
@@ -198,7 +199,7 @@ Index notes are entry points into a cluster of related permanent notes. They're 
 Check tag counts periodically or after capturing:
 
 ```bash
-obsidian vault=personal tags counts format=json
+obsidian vault={vault_name} tags counts format=json
 ```
 
 If a tag has **5+ notes** and no index note exists for that topic, suggest creating one:
@@ -209,7 +210,7 @@ Also suggest for named entities (companies, projects, jobs) when 3+ notes refere
 ### Creating an index
 
 ```bash
-obsidian vault=personal create path="Permanent/$(date +%Y%m%d%H%M)-${TOPIC}-index.md" \
+obsidian vault={vault_name} create path="Permanent/$(date +%Y%m%d%H%M)-${TOPIC}-index.md" \
   content="# $TOPIC Index\n#index #$TAG\n\n## Notes\n1. [[note-one|claim]]\n2. [[note-two|claim]]\n"
 ```
 
@@ -231,7 +232,7 @@ When to suggest a tag:
 
 ```bash
 # See all existing tags before suggesting new ones
-obsidian vault=personal tags counts format=json
+obsidian vault={vault_name} tags counts format=json
 ```
 
 ---
@@ -246,21 +247,21 @@ Search for relevant notes by topic, tag, or keyword:
 
 ```bash
 # Search by concept
-obsidian vault=personal search query="$TOPIC"
-obsidian vault=personal search:context query="$TOPIC"
+obsidian vault={vault_name} search query="$TOPIC"
+obsidian vault={vault_name} search:context query="$TOPIC"
 
 # Find notes with a relevant tag
-obsidian vault=personal tag name="$TAG" verbose
+obsidian vault={vault_name} tag name="$TAG" verbose
 
 # Check if there's an index for this domain
-obsidian vault=personal search query="#index $TOPIC"
+obsidian vault={vault_name} search query="#index $TOPIC"
 ```
 
 Read any relevant permanent notes — these represent the user's most distilled thinking:
 
 ```bash
-obsidian vault=personal read file="$NOTE_NAME"
-obsidian vault=personal backlinks file="$NOTE_NAME"
+obsidian vault={vault_name} read file="$NOTE_NAME"
+obsidian vault={vault_name} backlinks file="$NOTE_NAME"
 ```
 
 ### Surfacing context proactively
@@ -279,7 +280,7 @@ Agent-generated captures should be clearly marked so the user can review and cur
 
 ```bash
 # Append with agent attribution
-obsidian vault=personal append path="Daily/$(date +%Y%m%d)-daily.md" \
+obsidian vault={vault_name} append path="Daily/$(date +%Y%m%d)-daily.md" \
   content="- $(date '+%H:%M') [agent] $OBSERVATION"
 ```
 
@@ -298,36 +299,36 @@ The `[agent]` marker signals "review this — I thought it was worth saving but 
 ## CLI quick reference
 
 ```bash
-# All commands need vault=personal
-obsidian vault=personal <command>
+# All commands need vault={vault_name}
+obsidian vault={vault_name} <command>
 
 # Read a note
-obsidian vault=personal read path="Folder/note.md"
-obsidian vault=personal read file="note-name"   # resolves by name like wikilinks
+obsidian vault={vault_name} read path="Folder/note.md"
+obsidian vault={vault_name} read file="note-name"   # resolves by name like wikilinks
 
 # Create
-obsidian vault=personal create path="Folder/name.md" content="..."
+obsidian vault={vault_name} create path="Folder/name.md" content="..."
 
 # Append
-obsidian vault=personal append path="Folder/name.md" content="..."
+obsidian vault={vault_name} append path="Folder/name.md" content="..."
 
 # Move / rename
-obsidian vault=personal move file="old-name" path="Folder/new-name.md"
+obsidian vault={vault_name} move file="old-name" path="Folder/new-name.md"
 
 # Search
-obsidian vault=personal search query="keyword"
-obsidian vault=personal search:context query="keyword"
+obsidian vault={vault_name} search query="keyword"
+obsidian vault={vault_name} search:context query="keyword"
 
 # Links
-obsidian vault=personal backlinks file="note-name"
-obsidian vault=personal orphans
-obsidian vault=personal deadends
+obsidian vault={vault_name} backlinks file="note-name"
+obsidian vault={vault_name} orphans
+obsidian vault={vault_name} deadends
 
 # Tags
-obsidian vault=personal tags counts format=json
-obsidian vault=personal tag name="tagname" verbose
+obsidian vault={vault_name} tags counts format=json
+obsidian vault={vault_name} tag name="tagname" verbose
 
 # Files
-obsidian vault=personal files folder=Fleeting
-obsidian vault=personal files folder=Daily
+obsidian vault={vault_name} files folder=Fleeting
+obsidian vault={vault_name} files folder=Daily
 ```
