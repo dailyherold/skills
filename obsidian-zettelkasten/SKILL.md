@@ -223,7 +223,10 @@ Index conventions:
 
 ## Tags
 
-Tags live inline in the note body (not frontmatter), like `#leadership` or `#beyondmidi`.
+**Frontmatter tags:** Use when a tag applies to the entire note (page-level)
+**Inline tags:** Use when tagging a specific bullet or passage
+
+Both are valid — use whichever fits the scope.
 
 When to suggest a tag:
 - If the content clearly maps to an existing tag in the vault, suggest it
