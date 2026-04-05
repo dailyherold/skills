@@ -29,5 +29,14 @@ Thumbs.db
 *.log
 tmp/
 
+# Python
+__pycache__/
+*.py[oc]
+*.egg-info
+build/
+dist/
+wheels/
+.venv/
+
 # Peer review comms (ephemeral, not for version control)
 peer-review/reviews/

@@ -1,0 +1,10 @@
+[project]
+name = "portkey-status"
+version = "0.1.0"
+description = "Portkey model health checks and virtual key budget status"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "portkey-ai>=2.2.0",
+    "rich>=14.3.3",
+]
