@@ -1,7 +1,5 @@
-# External skill sources and symlinks
+# External skill sources (symlinks are committed; clones are not)
 src/
-anthropics-*
-K-Dense-AI-*
 
 # OS
 .DS_Store

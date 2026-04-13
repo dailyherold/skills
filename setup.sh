@@ -43,17 +43,11 @@ link_skill() {
     git -C "$clone_path" sparse-checkout add "$skill_path"
   fi
 
-  # Ensure org-* pattern is in .gitignore
-  local pattern="$org-*"
-  if ! grep -qxF "$pattern" "$SKILLS_DIR/.gitignore"; then
-    printf '%s\n' "$pattern" >> "$SKILLS_DIR/.gitignore"
-    echo "Added $pattern to .gitignore"
-  fi
-
   local target="$SKILLS_DIR/$symlink_name"
+  local relative_target="src/$repo_slug/$skill_path"
   if [ ! -L "$target" ]; then
-    ln -s "$clone_path/$skill_path" "$target"
-    echo "Linked: $symlink_name -> src/$repo_slug/$skill_path"
+    ln -s "$relative_target" "$target"
+    echo "Linked: $symlink_name -> $relative_target"
   else
     echo "Symlink exists: $symlink_name"
   fi
