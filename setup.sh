@@ -20,14 +20,13 @@ declare -a SKILLS=(
 )
 
 # ---------------------------------------------------------------------------
-# Helper — clone dir: src/org/repo, symlink name: org-skilldir
+# Helper — clone dir: src/org/repo, symlink name matches skill dir name
 # ---------------------------------------------------------------------------
 link_skill() {
   local repo="$1" skill_path="$2"
   local repo_slug="${repo#https://github.com/}"
-  local org="${repo_slug%%/*}"
   local skill_dir="${skill_path##*/}"
-  local symlink_name="$org-$skill_dir"
+  local symlink_name="$skill_dir"
   local clone_path="$SRC_DIR/$repo_slug"
 
   mkdir -p "$(dirname "$clone_path")"
