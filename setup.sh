@@ -33,18 +33,20 @@ link_skill() {
   mkdir -p "$(dirname "$clone_path")"
 
   if [ ! -d "$clone_path/.git" ]; then
-    echo "Cloning $repo -> $clone_path"
-    git clone "$repo" "$clone_path"
+    echo "Cloning $repo (sparse: $skill_path)"
+    git clone --no-checkout --filter=blob:none "$repo" "$clone_path"
+    git -C "$clone_path" sparse-checkout init --cone
+    git -C "$clone_path" sparse-checkout add "$skill_path"
+    git -C "$clone_path" checkout
   else
-    echo "Already cloned: $clone_path"
+    echo "Updating sparse checkout: $clone_path (+$skill_path)"
+    git -C "$clone_path" sparse-checkout add "$skill_path"
   fi
 
   # Ensure org-* pattern is in .gitignore
   local pattern="$org-*"
   if ! grep -qxF "$pattern" "$SKILLS_DIR/.gitignore"; then
-    sed -i '' "/^src\/$/a\\
-$pattern
-" "$SKILLS_DIR/.gitignore"
+    printf '%s\n' "$pattern" >> "$SKILLS_DIR/.gitignore"
     echo "Added $pattern to .gitignore"
   fi
 
