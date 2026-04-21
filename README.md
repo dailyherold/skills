@@ -12,7 +12,17 @@ Helpful skills I've written with agents to help agents work better for me.
 
 ## External Skills
 
-I develop my own skills in this repo but also pull in skills from other sources. External skills are cloned into `src/` and symlinked to the root — my agents see them alongside my own skills, but they're not tracked in this repo (each cloner brings in what they want).
+External skills are cloned (sparse) into `src/` and symlinked to the root. The symlinks are committed to this repo so agents discover them automatically; the `src/` clones are local-only and gitignored.
+
+### If you cloned this repo
+
+The symlinks will appear broken until you populate `src/` by running:
+
+```sh
+./setup.sh
+```
+
+To start fresh without any external skills, remove the entries you don't want from the `SKILLS` array in `setup.sh`, delete their symlinks, and remove `src/`.
 
 ### Adding a new external skill
 
@@ -20,6 +30,7 @@ I develop my own skills in this repo but also pull in skills from other sources.
    ```
    "https://github.com/owner/repo  path/to/skill"
    ```
-2. Run `./setup.sh` — it clones the repo (once), creates the symlink, and updates `.gitignore` automatically.
+2. Run `./setup.sh` — sparse-clones the repo and creates the symlink.
+3. Commit: `git add <skill-name> setup.sh && git commit`
 
 Open an issue with smarter ideas (not submodules).
