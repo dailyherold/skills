@@ -138,6 +138,48 @@ When a learner starts a working session, recommend they open `key-insights.md`
 alongside the plan and keep it open for the duration — it's a live capture tool,
 not a document to fill in afterwards.
 
+Also create a `session-log.md` alongside the plan using the template at
+[references/session-log-template.md](references/session-log-template.md). Do not wait
+for the learner to ask — create it at plan delivery time so logging can begin
+immediately.
+
+---
+
+## Session Logging
+
+The session log is the agent's memory across conversations. It is written by the agent,
+not the learner. The learner should never need to ask for it or remember to trigger it.
+
+**Entry unit: one completed step.** Each entry in the log corresponds to one completed
+Exercise Loop step (Attempt, Consume, Build, Break, Teach, Bridge). Do not wait for a
+session to end — write the entry as soon as a step is complete.
+
+**Three logging triggers (in priority order):**
+
+1. **Step completes** — immediately append a Step entry to `session-log.md` with the
+   Learner Model rows that changed, any new Open Threads, and the full exchange for
+   that step. Update the Index. This is the backbone trigger — the other two are
+   cleanup.
+
+2. **Learner signals wrap-up** — when the learner says anything indicating they're
+   done for now ("I'll read tonight", "see you tomorrow", "that's it for now"), append
+   a Session Marker to the log noting where they left off. No content block needed —
+   just the marker line and status.
+
+3. **Learner returns** — when a learner opens a new conversation on an existing plan,
+   check `session-log.md` before responding. If the last step completed has no log
+   entry, reconstruct and append it before proceeding. Then read the most recent
+   Learner Model and Open Threads to orient.
+
+**Learner Model — cumulative, not per-entry.** Each Step entry only records rows that
+changed. To get the current state of any concept, read all Learner Model blocks in
+chronological order. An agent summarizing the learner's current model should do this
+before any retrieval quiz or critique session.
+
+**Open Threads — mark resolved, don't delete.** When a thread from an earlier entry
+gets resolved, mark it with ~~strikethrough~~ in the entry where it closes. This
+preserves the arc of understanding.
+
 ---
 
 ## Phase Design
@@ -218,8 +260,9 @@ learning:
 
 ## Returning Learner Protocol
 
-When a learner returns to an existing plan, identify their entry point and respond
-accordingly:
+When a learner returns to an existing plan, follow the Session Logging protocol above
+(read `session-log.md`, reconstruct any missing entries, orient from the latest Learner
+Model and Open Threads). Then identify their entry point and respond accordingly:
 
 **"I'm on Phase X / picking up where I left off"**
 Offer a menu: (a) retrieval quiz on Phase X at the right interval, (b) an interleaving
