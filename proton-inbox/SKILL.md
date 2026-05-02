@@ -41,6 +41,21 @@ himalaya message read --output json --account proton <id>
 himalaya message read --output json --account proton --folder "All Mail" <id>
 ```
 
+## Envelope JSON shape
+
+`envelope list` returns a **JSON array**. Key fields per envelope:
+- `id` — string
+- `subject` — string
+- `date` — string
+- `flags` — array of strings e.g. `["Seen"]`, empty array if none
+- `from` / `to` — **objects** with `name` (nullable) and `addr` fields, not arrays
+- `has_attachment` — boolean
+
+```bash
+# correct jq — from/to are objects, not arrays
+himalaya envelope list --output json --account proton | jq -r '.[] | "\(.id)\t\(.from.name // .from.addr)\t\(.subject)"'
+```
+
 ## Searching
 
 All flags must come **before** query terms — query is a variadic positional arg.
