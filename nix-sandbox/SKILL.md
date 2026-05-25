@@ -1,6 +1,6 @@
 ---
 name: nix-sandbox
-description: "Run commands or tools in an isolated nix-shell sandbox without modifying the system. Use this skill whenever a needed tool or package isn't in PATH, the user says 'without installing' or 'don't touch my system', or you'd otherwise suggest nix-shell or nix run. Trigger automatically on 'command not found' errors, Python ModuleNotFoundError, Node 'Cannot find module', Ruby LoadError, or any time you would otherwise suggest pip install / gem install / npm install -g for a tool (not a project library). The skill handles platform detection and constructs the correct sandbox invocation for macOS (sandbox-exec) or Linux (bwrap) automatically."
+description: "Run commands or tools in an isolated nix-shell sandbox without modifying the system. Use this skill whenever a needed tool or package isn't in PATH, the user says 'without installing' or 'don't touch my system', or you'd otherwise suggest nix-shell or nix run. Trigger automatically on 'command not found' errors, Python ModuleNotFoundError, Node 'Cannot find module', Ruby LoadError, or any time you would otherwise run or suggest pip install / pip3 install / gem install / npm install -g for a tool (not a project library). The skill handles platform detection and constructs the correct sandbox invocation for macOS (sandbox-exec) or Linux (bwrap) automatically."
 ---
 
 # nix-sandbox
@@ -15,7 +15,7 @@ Trigger automatically when:
 - The user asks to run a script, tool, or command that isn't available (`command not found`)
 - A Python `ModuleNotFoundError` / `No module named X`, Node `Cannot find module`, or Ruby `LoadError` occurs and the package is needed as a **tool** being run, not a library the project imports
 - A task needs a specific language runtime, linter, formatter, or CLI not on the system
-- You are about to suggest `pip install`, `gem install`, or `npm install -g` to satisfy a tool dependency — stop and use nix-sandbox instead
+- You are about to run or suggest `pip install`, `pip3 install`, `gem install`, or `npm install -g` to satisfy a tool dependency — stop and use nix-sandbox instead
 - The user says "without installing", "in isolation", "don't touch my system", or similar
 - You would otherwise suggest `nix-shell` or `nix run` without isolation
 
