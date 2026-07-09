@@ -8,6 +8,7 @@ SRC_DIR="$SKILLS_DIR/src"
 # External skills — add entries here: <repo-url> <skill-path>
 # ---------------------------------------------------------------------------
 declare -a SKILLS=(
+  # Anthropic
   "https://github.com/anthropics/skills  skills/skill-creator"
   "https://github.com/anthropics/skills  skills/pdf"
   "https://github.com/anthropics/skills  skills/xlsx"
@@ -20,6 +21,17 @@ declare -a SKILLS=(
 
   # backnotprop/plannotator
   "https://github.com/backnotprop/plannotator  apps/skills/plannotator-compound"
+
+  # googleworkspace/cli — gws skills
+  "https://github.com/googleworkspace/cli  skills/gws-shared"
+  "https://github.com/googleworkspace/cli  skills/gws-docs"
+  "https://github.com/googleworkspace/cli  skills/gws-sheets"
+  "https://github.com/googleworkspace/cli  skills/gws-drive"
+  "https://github.com/googleworkspace/cli  skills/gws-slides"
+
+  # Sembi
+  "https://github.com/sembi-jessie/sembi-skills-orgchart skills/sembi-orgchart"
+
 )
 
 # ---------------------------------------------------------------------------
