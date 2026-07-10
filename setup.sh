@@ -30,7 +30,7 @@ declare -a SKILLS=(
   "https://github.com/googleworkspace/cli  skills/gws-slides"
 
   # Sembi
-  "https://github.com/sembi-jessie/sembi-skills-orgchart skills/sembi-orgchart"
+  "git@github.com:sembi-jessie/sembi-skills-orgchart.git skills/sembi-orgchart"
 
 )
 
@@ -40,6 +40,10 @@ declare -a SKILLS=(
 link_skill() {
   local repo="$1" skill_path="$2"
   local repo_slug="${repo#https://github.com/}"
+  if [[ "$repo" == git@github.com:* ]]; then
+    repo_slug="${repo#git@github.com:}"
+    repo_slug="${repo_slug%.git}"
+  fi
   local skill_dir="${skill_path##*/}"
   local symlink_name="$skill_dir"
   local clone_path="$SRC_DIR/$repo_slug"
