@@ -19,8 +19,14 @@ declare -a SKILLS=(
   "https://github.com/K-Dense-AI/claude-scientific-skills  scientific-skills/markitdown"
   "https://github.com/K-Dense-AI/claude-scientific-skills  scientific-skills/citation-management"
 
-  # backnotprop/plannotator
-  "https://github.com/backnotprop/plannotator  apps/skills/plannotator-compound"
+  # backnotprop/plannotator — core skills (all agents)
+  "https://github.com/backnotprop/plannotator  apps/skills/core/plannotator-annotate"
+  "https://github.com/backnotprop/plannotator  apps/skills/core/plannotator-last"
+  "https://github.com/backnotprop/plannotator  apps/skills/core/plannotator-review"
+  # backnotprop/plannotator — extra skills
+  "https://github.com/backnotprop/plannotator  apps/skills/extra/plannotator-compound"
+  "https://github.com/backnotprop/plannotator  apps/skills/extra/plannotator-setup-goal"
+  "https://github.com/backnotprop/plannotator  apps/skills/extra/plannotator-visual-explainer"
 
   # googleworkspace/cli — gws skills
   "https://github.com/googleworkspace/cli  skills/gws-shared"
@@ -34,7 +40,6 @@ declare -a SKILLS=(
 
   # mvanhorn/last30days-skill
   "https://github.com/mvanhorn/last30days-skill skills/last30days"
-
 )
 
 # ---------------------------------------------------------------------------
