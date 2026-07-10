@@ -32,6 +32,9 @@ declare -a SKILLS=(
   # Sembi
   "git@github.com:sembi-jessie/sembi-skills-orgchart.git skills/sembi-orgchart"
 
+  # mvanhorn/last30days-skill
+  "https://github.com/mvanhorn/last30days-skill skills/last30days"
+
 )
 
 # ---------------------------------------------------------------------------
