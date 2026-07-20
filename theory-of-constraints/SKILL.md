@@ -1,7 +1,7 @@
 ---
 name: theory-of-constraints
 description: "Use this skill when the user is struggling with a bottleneck, asking what to fix first, or deciding between competing improvements. Trigger on: \"reviews are taking forever\", \"CI/CD is slowing us down\", \"should we hire or automate?\", \"we can't ship fast enough\", \"the team is overwhelmed\", or any question about what's limiting throughput. Also trigger when someone is optimizing something that might not be the real constraint. This skill applies Goldratt's 5 Focusing Steps — use it rather than guessing at process fixes."
-license: Apache-2.0
+license: MIT
 allowed-tools: Read
 ---
 
