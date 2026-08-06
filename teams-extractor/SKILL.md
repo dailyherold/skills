@@ -13,37 +13,46 @@ description: >
   [topic] in Teams", "Teams DM from [person]", "capture that Teams message",
   or any request to read or search Teams chat history. Do NOT use for
   sending messages — read-only.
-compatibility: Requires uv and git. See "Maintenance: updating the pinned engine version" and scripts/vendor/VENDORED.md for how the dependency chain is pinned and maintained. Native Teams desktop app cache works on macOS only (Microsoft discontinued the Linux client in 2022). Chromium web app cache works on both macOS and Linux.
+compatibility: >
+  Requires uv and git. See "Maintenance: updating the pinned engine version"
+  and scripts/vendor/VENDORED.md for how the dependency chain is pinned and
+  maintained. Native Teams desktop app cache works on macOS only (Microsoft
+  discontinued the Linux client in 2022). Chromium web app cache works on
+  both macOS and Linux.
 license: MIT
 ---
 
 # Teams Extractor
 
 Reads Microsoft Teams messages directly from the local IndexedDB LevelDB
-cache. No auth setup. No API calls. Works offline. Zero IT footprint.
+cache. No auth setup. No API calls. Works offline. Zero IT footprint. The
+script is `scripts/teams_extractor.py`, self-contained via PEP 723 inline
+deps — run with `uv run`.
 
-Parsing is delegated to
+Parsing is handled by
 [ccl_chromium_reader](https://github.com/cclgroupltd/ccl_chromium_reader), a
-proper LevelDB + V8 deserialization library, rather than scanning raw bytes
-for marker strings. That means messages arrive as fully structured data
-(correct field names, nested objects), and both compacted `.ldb` files and the
-write-ahead log (`.log`) are parsed with the same reliability — there's no
-separate "recent messages might be missing" caveat to work around.
+LevelDB and V8 deserialization library. Messages are read as structured data
+(correct field names, nested objects) from both compacted `.ldb` files and the
+write-ahead log (`.log`) with equal reliability.
+
+## Freshness lag
+
+This reads a snapshot of the local cache, not a live feed — messages sent
+seconds ago may not show up immediately. Two delays stack:
+
+1. **App → cache sync** — Teams must write the message into its local
+   IndexedDB before it's readable at all. Typically seconds to a couple of
+   minutes while Teams is open; doesn't happen while Teams is closed.
+2. **Snapshot age** — the extractor only sees what was in the cache at the
+   moment `cp -r` ran. Re-copy the cache (Step 1) immediately before
+   re-running the extractor to pick up anything recent.
+
+If a very recent message is still missing after a fresh copy, wait a minute
+with Teams open and re-copy.
 
 Works with two Teams deployment types:
 - **Chromium web app** — Teams opened in a Chromium browser at `teams.cloud.microsoft` (macOS or Linux)
 - **Native desktop app** — The Microsoft Teams 2.x app (WebView2-based), available on **macOS only**. Microsoft discontinued the official native Linux client in 2022, replacing it with the web/PWA app. On Linux, use the Chromium web app path instead.
-
-## Available scripts
-
-- **`scripts/teams_extractor.py`** — Extracts messages from a copied
-  IndexedDB LevelDB cache. Supports filtering by sender display name, keyword
-  search, and recency. Self-contained via PEP 723 inline deps — run with
-  `uv run`.
-- **`scripts/vendor/`** — A vendored dependency and the notes on why it's
-  vendored and how to maintain it. Not something you need to touch to run the
-  skill; see "Maintenance: updating the pinned engine version" below if the
-  pinned engine version ever needs bumping.
 
 ## Prerequisites
 
@@ -202,43 +211,12 @@ Use the exact name as it appears in Teams (e.g. `'Jane Doe'`, not `'Doe'`
 or `'jane.doe@example.com'`). If unsure, omit `--from-user` and use `--search`
 with a unique phrase from the person to locate them.
 
-## Common patterns
-
-### Pre-meeting context check
-```bash
-# 1. Auto-detect cache (see Step 1 above), then:
-cp -r "$TEAMS_CACHE" /tmp/teams_copy
-uv run scripts/teams_extractor.py /tmp/teams_copy \
-  --from-user 'Person Name' \
-  --recent 30 \
-  --output /tmp/teams_person.txt
-cat /tmp/teams_person.txt
-```
-
-### Search across all recent activity
-```bash
-cp -r "$TEAMS_CACHE" /tmp/teams_copy
-uv run scripts/teams_extractor.py /tmp/teams_copy \
-  --search 'topic or keyword' \
-  --recent 20
-```
-
-### Full discovery + copy one-liner (macOS native app, with blob dir)
-```bash
-BASE="$HOME/Library/Containers/com.microsoft.teams2/Data/Library/Application Support/Microsoft/MSTeams/EBWebView/WV2Profile_tfw/IndexedDB"
-cp -r "$BASE/https_teams.microsoft.com_0.indexeddb.leveldb" /tmp/teams_copy
-cp -r "$BASE/https_teams.microsoft.com_0.indexeddb.blob" /tmp/teams_blob_copy
-```
-
-### Full discovery + copy one-liner (Linux, Chromium web app)
-```bash
-cp -r ~/.config/chromium/Default/IndexedDB/https_teams.cloud.microsoft_0.indexeddb.leveldb /tmp/teams_copy
-```
-
 ## Limitations
 
 - Read-only — no send, reply, or organize capability
 - Local cache only — history limited to what the app has cached (typically weeks)
+- Snapshot-based, not live — see "Freshness lag" note near the top; re-copy
+  the cache before re-running if you need something that just happened
 - Received messages rely on display name matching; partial names may miss results
 - Cache must exist on disk — Teams must have been opened at least once on this machine
 - First run needs network access (to fetch the pinned `ccl_chromium_reader`

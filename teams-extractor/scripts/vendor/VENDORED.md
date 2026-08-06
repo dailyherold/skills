@@ -5,23 +5,22 @@
 `teams_extractor.py` uses `ccl_chromium_reader` (pinned to a commit, via git
 — see the script's PEP 723 header) as its LevelDB/IndexedDB parsing engine.
 That library depends on `ccl_simplesnappy` for pure-Python Snappy
-decompression, but declares it as an **unpinned** git URL (`@ HEAD`) in its
-own `pyproject.toml`. Left as-is, every fresh `uv run` would clone whatever
-`ccl_simplesnappy` happens to be at `HEAD` — an untracked, unreviewed moving
-target — and `git` would be required just to satisfy this one small
-transitive dependency.
+decompression, declared as an **unpinned** git URL (`@ HEAD`) in its own
+`pyproject.toml`. Without vendoring, every `uv run` would resolve
+`ccl_simplesnappy` to whatever is currently at `HEAD` — an unpinned,
+unreviewed dependency — and require `git` solely to satisfy it.
 
 `ccl_simplesnappy_pkg/` is a vendored copy of
 [cclgroupltd/ccl_simplesnappy](https://github.com/cclgroupltd/ccl_simplesnappy),
-pinned at commit `3d085230baa8c46cf2090ebba29bf6e8eab31087` (its only commit
-as of this writing). It's a single ~300-line pure-Python file with zero
-dependencies and no compiled extensions (MIT-licensed, `LICENSE` included
-here), so vendoring it carries very low maintenance risk and keeps the
-dependency chain fully pinned and auditable.
+pinned at commit `3d085230baa8c46cf2090ebba29bf6e8eab31087` (its only commit).
+It's a single ~300-line pure-Python file with zero dependencies and no
+compiled extensions (MIT-licensed, `LICENSE` included here), so vendoring it
+carries low maintenance risk and keeps the dependency chain fully pinned and
+auditable.
 
 `git` is still required overall — `ccl_chromium_reader` itself isn't on PyPI
-and must be fetched from GitHub. Vendoring only removes the *second*,
-unpinned git dependency that would otherwise ride along with it.
+and must be fetched from GitHub. Vendoring removes only the second, unpinned
+git dependency that would otherwise ride along with it.
 
 ## How it's wired in
 
