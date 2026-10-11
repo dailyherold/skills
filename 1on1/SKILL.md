@@ -233,14 +233,16 @@ note patterns):
 
 ```markdown
 - #<workspace_tag> 1:1 with [[YYYYMMDDHHMM-firstname-lastname|Name]]
-  - Personal context
-    - [bullet]
-  - Discuss
-    - [bullet]
-    - [bullet]
-  - Action items
-    - [ ] Item *(owner — YYYYMMDD)* #todo
+    - Personal context
+        - [bullet]
+    - Discuss
+        - [bullet]
+        - [bullet]
+    - Action items
+        - [ ] Item *(owner — YYYYMMDD)* #todo
 ```
+
+**Indentation:** Use **4-space indent** for section headers (Personal context, Discuss, Action items) and **8-space indent** for bullets within each section. This matches the vault's existing daily note block convention — do not use 2-space indent.
 
 Use `[[filename|display]]` wikilink format for the person. Look up their
 profile filename first:

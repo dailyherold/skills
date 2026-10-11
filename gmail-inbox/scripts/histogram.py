@@ -49,9 +49,19 @@ def gws(*args, account=None):
 
 
 def _refresh_access_token(account=None):
-    """Exchange a refresh token for an access token via OAuth2."""
-    raw = gws('auth', 'export', '--unmasked', account=account)
-    creds = json.loads(raw)
+    """Exchange a refresh token for an access token via OAuth2.
+
+    Returns (access_token, quota_project_id_or_None).
+    """
+    try:
+        raw = gws('auth', 'export', '--unmasked', account=account)
+        creds = json.loads(raw)
+    except SystemExit:
+        # Fallback: some setups store plaintext credentials on disk instead
+        # of the encrypted store 'gws auth export' expects.
+        cred_path = os.path.expanduser('~/.config/gws/credentials.json')
+        with open(cred_path) as f:
+            creds = json.load(f)
     params = json.dumps({
         'client_id': creds['client_id'],
         'client_secret': creds['client_secret'],
@@ -65,7 +75,8 @@ def _refresh_access_token(account=None):
         method='POST',
     )
     with urllib.request.urlopen(req) as resp:
-        return json.loads(resp.read())['access_token']
+        token = json.loads(resp.read())['access_token']
+    return token, creds.get('quota_project_id')
 
 
 class TokenManager:
@@ -79,12 +90,22 @@ class TokenManager:
         self.account = account
         self._token = None
         self._expires_at = 0.0
+        self.quota_project = None
 
     def get(self):
         if time.time() >= self._expires_at:
-            self._token = _refresh_access_token(self.account)
+            self._token, self.quota_project = _refresh_access_token(self.account)
             self._expires_at = time.time() + self.TTL
         return self._token
+
+    def headers(self):
+        """Auth headers, including quota project header if available (needed
+        when Gmail API access requires an explicit quota project)."""
+        self.get()
+        h = {'Authorization': f'Bearer {self._token}'}
+        if self.quota_project:
+            h['X-Goog-User-Project'] = self.quota_project
+        return h
 
 
 def list_message_ids(query, account=None):
@@ -301,14 +322,15 @@ def _parse_batch_response(body, boundary, chunk_ids):
     return senders, retry_ids
 
 
-def _do_batch(chunk_ids, token):
+def _do_batch(chunk_ids, token_mgr):
     """Send one batch request; return (senders_dict, retry_ids)."""
     boundary = uuid.uuid4().hex
     body = _build_batch_body(chunk_ids, boundary)
+    headers = token_mgr.headers()
+    headers['Content-Type'] = f'multipart/mixed; boundary={boundary}'
     req = urllib.request.Request(
         BATCH_URL, data=body,
-        headers={'Authorization': f'Bearer {token}',
-                 'Content-Type': f'multipart/mixed; boundary={boundary}'},
+        headers=headers,
         method='POST',
     )
     try:
@@ -360,7 +382,7 @@ def fetch_senders_batch(msg_ids, token_mgr, conn):
         chunks = [pending[i:i + BATCH_SIZE] for i in range(0, len(pending), BATCH_SIZE)]
 
         for i, chunk in enumerate(chunks):
-            senders, retry_ids = _do_batch(chunk, token_mgr.get())
+            senders, retry_ids = _do_batch(chunk, token_mgr)
             results.update(senders)
             next_pending.extend(retry_ids)
             cache_store(conn, senders)  # incremental write — resume is free
@@ -412,10 +434,11 @@ def batch_modify_messages(msg_ids, token_mgr, add_labels=None, remove_labels=Non
         if remove_labels:
             payload['removeLabelIds'] = remove_labels
         data = json.dumps(payload).encode()
+        headers = token_mgr.headers()
+        headers['Content-Type'] = 'application/json'
         req = urllib.request.Request(
             MODIFY_URL, data=data,
-            headers={'Authorization': f'Bearer {token_mgr.get()}',
-                     'Content-Type': 'application/json'},
+            headers=headers,
             method='POST',
         )
         try:
