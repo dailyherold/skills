@@ -19,12 +19,13 @@ declare -a SKILLS=(
   "https://github.com/K-Dense-AI/claude-scientific-skills  scientific-skills/markitdown"
   "https://github.com/K-Dense-AI/claude-scientific-skills  scientific-skills/citation-management"
 
-  # backnotprop/plannotator — core skills (all agents)
+  # backnotprop/plannotator — core skills (all agents); install.sh writes none
+  # of these (see nixfiles plannotator.nix)
+  "https://github.com/backnotprop/plannotator  apps/skills/core/plannotator"
   "https://github.com/backnotprop/plannotator  apps/skills/core/plannotator-annotate"
   "https://github.com/backnotprop/plannotator  apps/skills/core/plannotator-last"
   "https://github.com/backnotprop/plannotator  apps/skills/core/plannotator-review"
   # backnotprop/plannotator — extra skills
-  "https://github.com/backnotprop/plannotator  apps/skills/extra/plannotator-compound"
   "https://github.com/backnotprop/plannotator  apps/skills/extra/plannotator-setup-goal"
   "https://github.com/backnotprop/plannotator  apps/skills/extra/plannotator-visual-explainer"
 
