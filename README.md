@@ -28,9 +28,13 @@ repos via `setup.sh` — see each skill's own `SKILL.md` for its requirements.
 
 MIT, see `LICENSE`. A few skills also carry their own `license:` field in frontmatter — that's for when a single skill folder gets pulled out and shared standalone, per the [Agent Skills spec](https://agentskills.io/specification).
 
+## How agents find these skills
+
+[nixfiles](https://github.com/dailyherold/nixfiles) (`modules/home-manager/agent-skills.nix`) symlinks every top-level skill dir here — plus skills from work repos — into each agent harness's skills dir (Claude Code, opencode, pi, kiro) on `home-manager switch`. Harness dirs are never symlinked to this repo as a whole, so harness-owned state stays out of it. New skills appear after the next switch.
+
 ## External Skills
 
-External skills are cloned (sparse) into `src/` and symlinked to the root. The symlinks are committed to this repo so agents discover them automatically; the `src/` clones are local-only and gitignored.
+External skills are cloned (sparse) into `src/` and symlinked to the root. The symlinks are committed so every machine gets the same skill set (nixfiles then links them into each harness); the `src/` clones are local-only and gitignored.
 
 ### If you cloned this repo
 
